@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS aion_ls;
+USE aion_ls;
+
 -- ----------------------------
 -- account_data
 -- ----------------------------

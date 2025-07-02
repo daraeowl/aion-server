@@ -1,0 +1,109 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: aion-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${AION_LS_DB}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./login-server/sql/aion_ls.sql:/docker-entrypoint-initdb.d/aion_ls.sql:ro
+      - ./game-server/sql/aion_gs.sql:/docker-entrypoint-initdb.d/aion_gs.sql:ro
+      - ./chat-server/sql/aion_cs.sql:/docker-entrypoint-initdb.d/aion_cs.sql:ro
+      - ./init-user.sql:/docker-entrypoint-initdb.d/init-user.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - aion-net
+
+  login-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aion-server:latest
+    container_name: aion-login-server
+    restart: unless-stopped
+    environment:
+      SERVER_TYPE: login-server
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${AION_LS_DB}
+    ports:
+      - "2106:2106"
+      - "9014:9014"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9014"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - aion-net
+
+  chat-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aion-server:latest
+    container_name: aion-chat-server
+    restart: unless-stopped
+    environment:
+      SERVER_TYPE: chat-server
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${AION_CS_DB}
+    ports:
+      - "10241:10241"
+      - "9021:9021"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9021"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - aion-net
+
+  game-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aion-server:latest
+    container_name: aion-game-server
+    restart: unless-stopped
+    environment:
+      SERVER_TYPE: game-server
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${AION_GS_DB}
+      LOGIN_SERVER_HOST: login-server
+      CHAT_SERVER_HOST: chat-server
+    ports:
+      - "7777:7777"
+    depends_on:
+      login-server:
+        condition: service_healthy
+      chat-server:
+        condition: service_healthy
+    networks:
+      - aion-net
+
+volumes:
+  db_data:
+
+networks:
+  aion-net:
+    driver: bridge 

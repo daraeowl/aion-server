@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS aion_gs;
+USE aion_gs;
+
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------

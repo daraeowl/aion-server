@@ -1,0 +1,36 @@
+# Version control
+.git
+.gitignore
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Maven/Java build artifacts
+target/
+*/target/
+
+# Local config overrides
+my*.properties
+
+# Test files
+test/
+*/test/
+
+# Docker files (exclude from build context)
+Dockerfile
+docker-compose.yml
+.dockerignore
+.env
+README-Docker.md
+
+# Node/npm (if any)
+node_modules/
+
+# Misc
+*.log 
